@@ -20,7 +20,7 @@ def useMicroTeamsApp():
 
             if win.isMinimized:
                 win.restore()
-                time.sleep(1)
+                time.sleep(0.5)
 
             x, y = win.center
             pyautogui.click(x, y)
@@ -44,8 +44,21 @@ def navigateToMeet():
     pyautogui.press("tab", presses=8, interval=0.4)
     pyautogui.press("enter")
 
+    time.sleep(2)
+    pyautogui.hotkey("ctrl", "shift", "o")
+    pyautogui.hotkey("ctrl", "shift", "e")
+
+    pyautogui.press("tab", presses=3, interval=0.8)
+    pyautogui.press("enter")
+    # pyautogui.press("enter")
+    time.sleep(10)
+
+    pyautogui.hotkey("ctrl", "shift", "e")
+    time.sleep(1)
+    pyautogui.hotkey("ctrl", "shift", "H")
+
 openMicroTeams()
-time.sleep(5)
+time.sleep(1)
 useMicroTeamsApp()
 navigateToMeet()
 
