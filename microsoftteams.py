@@ -4,6 +4,7 @@ import pyautogui
 import pygetwindow as gw
 
 pyautogui.FAILSAFE = True
+iteration = 1 
 
 
 def openMicroTeams():
@@ -48,19 +49,28 @@ def navigateToMeet():
     pyautogui.hotkey("ctrl", "shift", "o")
     pyautogui.hotkey("ctrl", "shift", "e")
 
+    time.sleep(1)
+
     pyautogui.press("tab", presses=3, interval=0.8)
     pyautogui.press("enter")
     # pyautogui.press("enter")
     time.sleep(10)
 
+    # leave meeting
     pyautogui.hotkey("ctrl", "shift", "e")
     time.sleep(1)
     pyautogui.hotkey("ctrl", "shift", "H")
 
 openMicroTeams()
-time.sleep(1)
-useMicroTeamsApp()
-navigateToMeet()
+time.sleep(5) 
+
+for i in range(iteration):
+    print(f"\Iteration {i + 1}")
+
+    useMicroTeamsApp()
+    navigateToMeet()
+
+    time.sleep(5)  
+
 
 print("made it till here")
-
