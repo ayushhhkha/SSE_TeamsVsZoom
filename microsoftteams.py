@@ -2,6 +2,9 @@ import time
 import subprocess
 import pyautogui
 import pygetwindow as gw
+# import os
+
+# os.system('start "" "https://teams.microsoft.com/l/meetup-join/XXXX"')              
 
 pyautogui.FAILSAFE = True
 iteration = 2
@@ -29,12 +32,28 @@ def useMicroTeamsApp():
 
         time.sleep(0.5)
 
-# this only works when u start from beginning the app and already have a link open for the meet 
-# and also when the video is off
 
-# first time open the camera and enable blur
-def firstJoin():
-    # open camera settings
+def switchMenu():
+    # ctrl 1 and 2 to make it go to meet menu section in case of some issues
+    pyautogui.hotkey("ctrl", "1")
+    time.sleep(1)
+    pyautogui.hotkey("ctrl", "2")
+    time.sleep(1)
+
+# ensures teams is hard closed so when we open it everything is reset to default settings
+def killTeams():
+    subprocess.run(
+        ["taskkill", "/F", "/IM", "ms-teams.exe", "/T"],
+        shell=False
+    )
+    subprocess.run(
+        ["taskkill", "/F", "/IM", "Teams.exe", "/T"],
+        shell=False
+    )
+    print("Teams killed")
+
+def cameraSettingWithBlur():
+    # open camera and blur 
     pyautogui.hotkey("ctrl", "shift", "o")
     pyautogui.press("right", presses=1, interval=0.8)
     pyautogui.press("enter")
@@ -47,36 +66,30 @@ def firstJoin():
 
     pyautogui.press("esc", interval=0.8)
 
-    # go to Join now
     pyautogui.press("tab", presses=11, interval=0.4)
     pyautogui.press("enter")
 
-#second time the camera is auto open 
-def extraJoin():
+def cameraSettingNoBlur():
+    # open camera and have no blur
+    pyautogui.hotkey("ctrl", "shift", "o")
+    pyautogui.press("right", presses=1, interval=0.8)
+    pyautogui.press("enter")
     time.sleep(1)
+
+    pyautogui.press("enter")
+    time.sleep(1)
+
+    pyautogui.press("esc", interval=0.8)
+
+    pyautogui.press("tab", presses=11, interval=0.4)
+    pyautogui.press("enter")
+
+def noCameraSetting():
+    # camera auto off 
     pyautogui.press("tab", presses=7, interval=0.4)
     pyautogui.press("enter")
 
-
-def navigateToMeet(firstTime):
-    # ctrl 1 and 2 to make it go to meet menu section in case of some issues
-    pyautogui.hotkey("ctrl", "1")
-    time.sleep(1)
-    pyautogui.hotkey("ctrl", "2")
-    time.sleep(1)
-
-    # navigate to the join meet 
-    pyautogui.press("tab", presses=4, interval=0.4)
-    pyautogui.press("right", presses=2, interval=0.4)
-    pyautogui.press("enter")
-    time.sleep(2)
-
-    #pre join menu 
-    if firstTime:
-        firstJoin()
-    else:
-        extraJoin()
-
+def screenShare():
     # screen share
     time.sleep(2)
     pyautogui.hotkey("ctrl", "shift", "e")  
@@ -84,28 +97,50 @@ def navigateToMeet(firstTime):
     pyautogui.press("tab", presses=3, interval=0.8)
     pyautogui.press("enter")
 
-    # how long the screen share will be (for now put it 10 sec for testing)
+
+# select the options cameraBlur, cameraNoblur and camerano
+def optionSelect():
+    cameraSettingWithBlur()
+    # cameraSettingNoBlur()
+    # noCameraSetting()
+
+
+def navigateToMeet():
+    switchMenu()
+
+    # navigate to the join meet 
+    pyautogui.press("tab", presses=4, interval=0.4)
+    pyautogui.press("right", presses=2, interval=0.4)
+    pyautogui.press("enter")
+    time.sleep(2)
+
+    #join based on options 
+    optionSelect()
+    screenShare()
+
+    # IMPORTANT how long it will wait after doing stuff (for now put it 10 sec for testing)
     time.sleep(10)
 
     # leave meeting
-    pyautogui.hotkey("ctrl", "shift", "e")
-    time.sleep(1)
+    pyautogui.hotkey("ctrl", "shift", "e")    
+    time.sleep(2)
     pyautogui.hotkey("ctrl", "shift", "h")
 
 
 def experimentation():
 
-    openMicroTeams()
-    time.sleep(5)
-
     for i in range(iteration):
         print(f"\nIteration {i + 1}")
 
+        openMicroTeams()
+        time.sleep(9)
+
         useMicroTeamsApp()
 
-        firstTime = (i == 0)
-        navigateToMeet(firstTime)
+        navigateToMeet()
 
+        time.sleep(5)
+        killTeams()  
         time.sleep(5)
 
     print("made it till here")
