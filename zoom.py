@@ -13,7 +13,7 @@ MEETING_LINK_1 = "zoommtg://zoom.us/join?confno=6474533966&pwd=YkF1bzhyOVZYUmJQd
 MEETING_ID = "6474533966"
 PWD = "YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
 
-ZOOM_EXE = "C:\\Users\\carol\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe" # Change this later
+ZOOM_EXE = "C:\\Users\\nicol\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe" # Change this later
 
 JOIN_WAIT = 20
 
@@ -148,47 +148,47 @@ def killZoom(wait_s: float = 5.0) -> None:
 
 # Testing it all out
 
-print("Opening Zoom Meeting...")
-openZoom()
+# print("Opening Zoom Meeting...")
+# openZoom()
 
-print(f"Waiting {JOIN_WAIT} seconds for Zoom to launch/join...")
-time.sleep(JOIN_WAIT)
+# print(f"Waiting {JOIN_WAIT} seconds for Zoom to launch/join...")
+# time.sleep(JOIN_WAIT)
 
-print("Toggling camera...")
-cameraSettingNoBlur()
+# print("Toggling camera...")
+# cameraSettingNoBlur()
 
-print("Sharing screen...")
-screenShare()
+# print("Sharing screen...")
+# screenShare()
 
-time.sleep(10)
+# time.sleep(10)
 
-print("Stop sharing screen...")
-stop_sharing_screen()
+# print("Stop sharing screen...")
+# stop_sharing_screen()
 
-time.sleep(2)
+# time.sleep(2)
 
-print("Toggling blurring of the background...")
-x, y = zoom_window_xy(0.85, 0.20)
-cameraSettingWithBlur(
-    right_click_x=x,
-    right_click_y=y,
-    down_presses=3
-)
+# print("Toggling blurring of the background...")
+# x, y = zoom_window_xy(0.85, 0.20)
+# cameraSettingWithBlur(
+#     right_click_x=x,
+#     right_click_y=y,
+#     down_presses=3
+# )
 
-time.sleep(5)
+# time.sleep(5)
 
-cameraSettingWithBlur(
-    right_click_x=x,
-    right_click_y=y,
-    down_presses=3
-)
-
-
-
-time.sleep(5)
-print("Done!")
-killZoom()
+# cameraSettingWithBlur(
+#     right_click_x=x,
+#     right_click_y=y,
+#     down_presses=3
+# )
 
 
 
-# To run, just type in terminal: python zoom.py
+# time.sleep(5)
+# print("Done!")
+# killZoom()
+
+
+
+# # To run, just type in terminal: python zoom.py
