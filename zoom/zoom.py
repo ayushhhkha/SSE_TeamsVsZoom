@@ -3,6 +3,8 @@ import os
 import time
 import webbrowser
 from datetime import datetime
+import subprocess
+
 
 import pyautogui
 import mss
@@ -13,6 +15,11 @@ from typing import Optional, Tuple
 # Configurations
 
 MEETING_LINK = "https://us05web.zoom.us/j/6474533966?pwd=YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
+MEETING_LINK_1 = "zoommtg://zoom.us/join?confno=6474533966&pwd=YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
+MEETING_ID = "6474533966"
+PWD = "YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
+
+ZOOM_EXE = "C:\\Users\\carol\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe"
 
 JOIN_WAIT = 10
 CONFIDENCE = 0.70
@@ -105,12 +112,39 @@ def find_on_primary_screen_center(
         
     return None
 
+def get_zoom_window_rect():
+    windows = gw.getWindowsWithTitle("Zoom")
+    for w in windows:
+        if w.title:
+            if w.isMinimized:
+                w.restore()
+            return w.left, w.top, w.width, w.height
+    raise RuntimeError("Zoom window not found")
+
+def zoom_window_xy(rel_x_frac: float, rel_y_frac: float):
+    left, top, width, height = get_zoom_window_rect()
+    x = int(left + width * rel_x_frac)
+    y = int(top + height * rel_y_frac)
+    return x, y
+
 
 # Main functions
 
 def open_meeting_link(meeting_link: str) -> None:
     webbrowser.open(meeting_link)
+
+def open_zoom_meeting():
+    subprocess.Popen([ZOOM_EXE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(5)
     
+    zoom_uri = (
+        f"zoommtg://zoom.us/join?confno={MEETING_ID}&pwd={PWD}"
+    )
+    
+    os.startfile(
+        zoom_uri
+    )
+
 def toggle_camera() -> None:
     if not hard_focus_zoom():
         raise RuntimeError("Could not focus Zoom window!")
@@ -154,7 +188,8 @@ def toggle_blur_via_keyboard(
 # Testing it all out
 
 print("Opening Zoom Meeting...")
-webbrowser.open(MEETING_LINK)
+# webbrowser.open(MEETING_LINK)
+open_zoom_meeting()
 
 print(f"Waiting {JOIN_WAIT} seconds for Zoom to launch/join...")
 time.sleep(JOIN_WAIT)
@@ -179,7 +214,15 @@ stop_sharing_screen()
 time.sleep(3)
 
 print("Toggling blurring of the background...")
-x, y = primary_xy(300, 300)
+x, y = zoom_window_xy(0.85, 0.20)
+toggle_blur_via_keyboard(
+    right_click_x=x,
+    right_click_y=y,
+    down_presses=3
+)
+
+time.sleep(5)
+
 toggle_blur_via_keyboard(
     right_click_x=x,
     right_click_y=y,
