@@ -27,7 +27,7 @@ except Exception:
 
 # Helper functions
 
-def focus_zoom_window(timeout_s: float = 30.0) -> bool:
+def useZoomApp(timeout_s: float = 30.0) -> bool:
     start = time.time()
     while time.time() - start < timeout_s:
         candidates = (
@@ -60,7 +60,7 @@ def focus_zoom_window(timeout_s: float = 30.0) -> bool:
 def hard_focus_zoom(timeout_s: float = 30.0) -> bool:
     start = time.time()
     while time.time() - start < timeout_s:
-        if focus_zoom_window(timeout_s=2.0):
+        if useZoomApp(timeout_s=2.0):
             time.sleep(0.2)
             active = gw.getActiveWindow()
             if active and ("zoom" in (active.title or "").lower()):
@@ -86,7 +86,7 @@ def zoom_window_xy(rel_x_frac: float, rel_y_frac: float):
 
 # Main functions
 
-def open_zoom_meeting():
+def openZoom():
     subprocess.Popen([ZOOM_EXE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(5)
     
@@ -98,12 +98,12 @@ def open_zoom_meeting():
         zoom_uri
     )
 
-def toggle_camera() -> None:
+def cameraSettingNoBlur() -> None:
     if not hard_focus_zoom():
         raise RuntimeError("Could not focus Zoom window!")
     pyautogui.hotkey("alt", "v")
     
-def share_primary_screen(open_wait_s: float = 4) -> None:
+def screenShare(open_wait_s: float = 4) -> None:
     if not hard_focus_zoom():
         raise RuntimeError("Could not focus Zoom window!")
     
@@ -113,12 +113,12 @@ def share_primary_screen(open_wait_s: float = 4) -> None:
     pyautogui.press("enter")
     
 def stop_sharing_screen() -> None:
-    if not focus_zoom_window():
+    if not useZoomApp():
         raise RuntimeError("Could not focus Zoom window!")
     
     pyautogui.hotkey("alt", "s")
     
-def toggle_blur_via_keyboard(
+def cameraSettingWithBlur(
     right_click_x: int,
     right_click_y: int,
     down_presses: int = 3,
@@ -137,7 +137,7 @@ def toggle_blur_via_keyboard(
 
     pyautogui.press("enter")
 
-def hard_close_zoom(wait_s: float = 2.0) -> None:
+def killZoom(wait_s: float = 2.0) -> None:
     subprocess.run(["taskkill", "/F", "/T", "/IM", "Zoom.exe"],
                    stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL,
@@ -149,16 +149,16 @@ def hard_close_zoom(wait_s: float = 2.0) -> None:
 # Testing it all out
 
 print("Opening Zoom Meeting...")
-open_zoom_meeting()
+openZoom()
 
 print(f"Waiting {JOIN_WAIT} seconds for Zoom to launch/join...")
 time.sleep(JOIN_WAIT)
 
 print("Toggling camera...")
-toggle_camera()
+cameraSettingNoBlur()
 
 print("Sharing screen...")
-share_primary_screen()
+screenShare()
 
 time.sleep(10)
 
@@ -169,7 +169,7 @@ time.sleep(3)
 
 print("Toggling blurring of the background...")
 x, y = zoom_window_xy(0.85, 0.20)
-toggle_blur_via_keyboard(
+cameraSettingWithBlur(
     right_click_x=x,
     right_click_y=y,
     down_presses=3
@@ -177,7 +177,7 @@ toggle_blur_via_keyboard(
 
 time.sleep(5)
 
-toggle_blur_via_keyboard(
+cameraSettingWithBlur(
     right_click_x=x,
     right_click_y=y,
     down_presses=3
@@ -187,6 +187,6 @@ toggle_blur_via_keyboard(
 
 print("Done!")
 
-hard_close_zoom()
+killZoom()
 
 # To run, just type in terminal: python zoom.py
