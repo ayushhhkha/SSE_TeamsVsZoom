@@ -103,7 +103,7 @@ def cameraSettingNoBlur() -> None:
         raise RuntimeError("Could not focus Zoom window!")
     pyautogui.hotkey("alt", "v")
     
-def screenShare(open_wait_s: float = 4) -> None:
+def screenShare(open_wait_s: float = 3) -> None:  #3s to match the teams script
     if not hard_focus_zoom():
         raise RuntimeError("Could not focus Zoom window!")
     
@@ -137,7 +137,7 @@ def cameraSettingWithBlur(
 
     pyautogui.press("enter")
 
-def killZoom(wait_s: float = 2.0) -> None:
+def killZoom(wait_s: float = 5.0) -> None:
     subprocess.run(["taskkill", "/F", "/T", "/IM", "Zoom.exe"],
                    stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL,
@@ -165,7 +165,7 @@ time.sleep(10)
 print("Stop sharing screen...")
 stop_sharing_screen()
 
-time.sleep(3)
+time.sleep(2)
 
 print("Toggling blurring of the background...")
 x, y = zoom_window_xy(0.85, 0.20)
@@ -185,8 +185,10 @@ cameraSettingWithBlur(
 
 
 
+time.sleep(5)
 print("Done!")
-
 killZoom()
+
+
 
 # To run, just type in terminal: python zoom.py

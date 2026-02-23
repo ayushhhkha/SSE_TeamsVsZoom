@@ -7,7 +7,8 @@ import pygetwindow as gw
 # os.system('start "" "https://teams.microsoft.com/l/meetup-join/XXXX"')              
 
 pyautogui.FAILSAFE = True
-iteration = 2
+pyautogui.PAUSE = 0.2
+iteration = 1
 
 # need this to open the app
 def openMicroTeams():
@@ -44,11 +45,15 @@ def switchMenu():
 def killTeams():
     subprocess.run(
         ["taskkill", "/F", "/IM", "ms-teams.exe", "/T"],
-        shell=False
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     subprocess.run(
         ["taskkill", "/F", "/IM", "Teams.exe", "/T"],
-        shell=False
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     print("Teams killed")
 
