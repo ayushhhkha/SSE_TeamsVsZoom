@@ -55,12 +55,11 @@ def run_camera_on_off(app):
         teams.switchMenu()
         teams.navigateToMeet()
         print("Camera OFF (recording)")
-        #teams.      camera off function??
         # start_energibridge()
         time.sleep(30)
         # stop_energibridge()
         print("Camera ON (recording)")
-        # teams.     camera on function??
+        teams.cameraSettingNoBlur()
         # start_energibridge()
         time.sleep(30)
         # stop_energibridge()
@@ -69,12 +68,11 @@ def run_camera_on_off(app):
         zoomapp.openZoom()
         time.sleep(zoomapp.JOIN_WAIT)
         print("Camera OFF (recording)")
-        #zoomapp.       camera off function?
         # start_energibridge()
         time.sleep(30)
         # stop_energibridge()
         print("Camera ON (recording)")
-        #zoomapp.       camera on function?
+        zoomapp.cameraSettingNoBlur()
         # start_energibridge()
         time.sleep(30)
         # stop_energibridge()
