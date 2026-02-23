@@ -184,6 +184,14 @@ def toggle_blur_via_keyboard(
 
     pyautogui.press("enter")
 
+def hard_close_zoom(wait_s: float = 2.0) -> None:
+    subprocess.run(["taskkill", "/F", "/T", "/IM", "Zoom.exe"],
+                   stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL,
+                   check=False,
+                   )
+    
+    time.sleep(wait_s)
 
 # Testing it all out
 
@@ -232,5 +240,7 @@ toggle_blur_via_keyboard(
 
 
 print("Done!")
+
+hard_close_zoom()
 
 # To run, just type in terminal: python zoom.py
