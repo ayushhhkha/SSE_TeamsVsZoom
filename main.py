@@ -151,12 +151,10 @@ def main():
     fibonacci_warmup(300) # 5 minute warmup
     for task in TASKS:
         print(f"\n--- Starting task: {task} ---")
-        for i in range(ITERATIONS_PER_TASK * 2):
-            available = [app for app in ["teams", "zoom"] if counters[task][app] < ITERATIONS_PER_TASK]
-            if not available:
-                break
-            app = random.choice(available)
-            print(f"\nIteration {i+1} for {task}: {app.upper()}")
+        pool = ["teams"] * ITERATIONS_PER_TASK + ["zoom"] * ITERATIONS_PER_TASK
+        random.shuffle(pool)
+        for i, app in enumerate(pool):
+            print(f"\nIteration {i+1}/{len(pool)} for {task}: {app.upper()}")
             try:
                 iteration = counters[task][app] + 1
                 if task == "camera_on_off":
