@@ -33,4 +33,3 @@ This repository contains an automation of measure the energy Microsoft Team and 
    ```bash
    python main.py
    ```
-
