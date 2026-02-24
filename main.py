@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 # Experiment parameters
-ITERATIONS_PER_TASK = 15
+ITERATIONS_PER_TASK = 30
 
 # Task definitions
 TASKS = [
@@ -36,7 +36,7 @@ def fibonacci_warmup(duration_s):
     print("Warmup complete.\n")
 
 RESULTS_DIR = "results"
-ENERGIBRIDGE = "energibridge"  # full path if not on PATH, e.g. r"C:\tools\energibridge.exe"
+ENERGIBRIDGE = "C:/code/EnergiBridge/target/release/energibridge.exe"  # full path if not on PATH, e.g. r"C:\tools\energibridge.exe"
 
 def run_energibridge(app: str, test: str, iteration: int, duration_s: int = 30):
     """Wrap `timeout /t <duration_s>` with EnergiBridge.
@@ -74,8 +74,8 @@ def run_camera_on_off(app, iteration):
         teams.switchMenu()
         time.sleep(2)
         teams.navigateToMeet()
-        teams.noCameraSetting()
         print("Camera OFF (recording)")
+        teams.noCameraSetting()
         run_energibridge(app, "camera_off", iteration)
         print("Camera ON (recording)")
         teams.cameraopencommand()
@@ -99,12 +99,14 @@ def run_blur_no_blur(app, iteration):
         teams.useMicroTeamsApp()
         teams.switchMenu()
         teams.navigateToMeet()
+        teams.noCameraSetting()
         print("No Blur (recording)")
-        teams.cameraSettingNoBlur()
+        teams.camOnBlurOff()
         run_energibridge(app, "noblur", iteration)
         print("Blur (recording)")
         teams.turnOnBlurinMeeting()
         run_energibridge(app, "blur", iteration)
+        teams.turnOffBlurinMeeting()
         teams.killTeams()
     else:
         zoomapp.openZoom()
@@ -116,6 +118,8 @@ def run_blur_no_blur(app, iteration):
         x, y = zoomapp.zoom_window_xy(0.85, 0.20)
         zoomapp.cameraSettingWithBlur(x, y, down_presses=3)
         run_energibridge(app, "blur", iteration)
+        time.sleep(5)
+        zoomapp.cameraSettingWithBlur(x, y, down_presses=3)
         zoomapp.killZoom()
 
 def run_screen_share(app, iteration):
@@ -181,6 +185,7 @@ def main():
                 time.sleep(5)
             print("Cooldown: waiting 1 minute before next iteration...")
             time.sleep(60)
+            
     print("\n=== Experiment complete! ===")
     print_counters()
 
