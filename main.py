@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import subprocess
@@ -34,10 +35,28 @@ def fibonacci_warmup(duration_s):
                 a, b = 0, 1
     print("Warmup complete.\n")
 
-# def start_energibridge():
+RESULTS_DIR = "results"
+ENERGIBRIDGE = "energibridge"  # full path if not on PATH, e.g. r"C:\tools\energibridge.exe"
 
-
-# def stop_energibridge():
+def run_energibridge(app: str, test: str, iteration: int, duration_s: int = 30):
+    """Wrap `timeout /t <duration_s>` with EnergiBridge.
+    Output: results/<app>_<test>_<iteration>.csv  e.g. teams_camera_off_1.csv
+    """
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    label = f"{app}_{test}_{iteration}"
+    out = os.path.join(RESULTS_DIR, f"{label}.csv")
+    print(f"  [EnergiBridge] measuring '{label}' for {duration_s}s -> {out}")
+    subprocess.run(
+        [
+            ENERGIBRIDGE,
+            "--output", out,
+            "--summary",
+            "--",
+            "timeout", "/t", str(duration_s), "/nobreak",
+        ],
+        check=False,
+    )
+    print(f"  [EnergiBridge] done.")
 
 
 def print_counters():
@@ -46,7 +65,7 @@ def print_counters():
         print(f"  {task}: Teams={counters[task]['teams']}  Zoom={counters[task]['zoom']}")
     print()
 
-def run_camera_on_off(app):
+def run_camera_on_off(app, iteration):
     print(f"\n[{app.upper()}] Running camera ON/OFF test...")
     if app == "teams":
         teams.openMicroTeams()
@@ -57,30 +76,22 @@ def run_camera_on_off(app):
         teams.navigateToMeet()
         teams.noCameraSetting()
         print("Camera OFF (recording)")
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "camera_off", iteration)
         print("Camera ON (recording)")
         teams.cameraopencommand()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "camera_on", iteration)
         teams.killTeams()
     else:
         zoomapp.openZoom()
         time.sleep(zoomapp.JOIN_WAIT)
         print("Camera OFF (recording)")
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "camera_off", iteration)
         print("Camera ON (recording)")
         zoomapp.cameraSettingNoBlur()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "camera_on", iteration)
         zoomapp.killZoom()
 
-def run_blur_no_blur(app):
+def run_blur_no_blur(app, iteration):
     print(f"\n[{app.upper()}] Running BLUR/NO BLUR test...")
     if app == "teams":
         teams.openMicroTeams()
@@ -90,32 +101,24 @@ def run_blur_no_blur(app):
         teams.navigateToMeet()
         print("No Blur (recording)")
         teams.cameraSettingNoBlur()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "noblur", iteration)
         print("Blur (recording)")
         teams.turnOnBlurinMeeting()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "blur", iteration)
         teams.killTeams()
     else:
         zoomapp.openZoom()
         time.sleep(zoomapp.JOIN_WAIT)
         print("No Blur (recording)")
         zoomapp.cameraSettingNoBlur()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "noblur", iteration)
         print("Blur (recording)")
         x, y = zoomapp.zoom_window_xy(0.85, 0.20)
         zoomapp.cameraSettingWithBlur(x, y, down_presses=3)
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "blur", iteration)
         zoomapp.killZoom()
 
-def run_screen_share(app):
+def run_screen_share(app, iteration):
     print(f"\n[{app.upper()}] Running SCREEN SHARE test...")
     if app == "teams":
         teams.openMicroTeams()
@@ -127,27 +130,19 @@ def run_screen_share(app):
         teams.navigateToMeet()
         teams.noCameraSetting2()
         print("No Screen Share (recording)")
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "noshare", iteration)
         print("Screen Sharing (recording)")
         teams.screenShare()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "share", iteration)
         teams.killTeams()
     else:
         zoomapp.openZoom()
         time.sleep(zoomapp.JOIN_WAIT)
         print("No Screen Share (recording)")
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "noshare", iteration)
         print("Screen Sharing (recording)")
         zoomapp.screenShare()
-        # start_energibridge()
-        time.sleep(30)
-        # stop_energibridge()
+        run_energibridge(app, "share", iteration)
         zoomapp.stop_sharing_screen()
         zoomapp.killZoom()
 
@@ -163,12 +158,13 @@ def main():
             app = random.choice(available)
             print(f"\nIteration {i+1} for {task}: {app.upper()}")
             try:
+                iteration = counters[task][app] + 1
                 if task == "camera_on_off":
-                    run_camera_on_off(app)
+                    run_camera_on_off(app, iteration)
                 elif task == "blur_no_blur":
-                    run_blur_no_blur(app)
+                    run_blur_no_blur(app, iteration)
                 elif task == "screen_share":
-                    run_screen_share(app)
+                    run_screen_share(app, iteration)
                 else:
                     print(f"Unknown task: {task}")
                     continue
