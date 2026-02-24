@@ -10,11 +10,10 @@ import pygetwindow as gw
 
 MEETING_LINK = "https://us05web.zoom.us/j/6474533966?pwd=YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
 MEETING_LINK_1 = "zoommtg://zoom.us/join?confno=6474533966&pwd=YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
-MEETING_ID = "6474533966"
-PWD = "YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
+MEETING_ID = "3888938653"
+PWD = "N2ROYXg5REdpWnpSekxZcTQydmgwUT09"
 
-ZOOM_EXE = "C:\\Users\\nicol\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe" # Change this later
-
+ZOOM_EXE = "C:/Users/ayush/AppData/Roaming/Zoom/bin/Zoom.exe"
 JOIN_WAIT = 20
 
 pyautogui.FAILSAFE = True
