@@ -10,11 +10,10 @@ import pygetwindow as gw
 
 MEETING_LINK = "https://us05web.zoom.us/j/6474533966?pwd=YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
 MEETING_LINK_1 = "zoommtg://zoom.us/join?confno=6474533966&pwd=YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
-MEETING_ID = "6474533966"
-PWD = "YkF1bzhyOVZYUmJQdlAxRnVPejhEdz09"
+MEETING_ID = "3888938653"
+PWD = "N2ROYXg5REdpWnpSekxZcTQydmgwUT09"
 
-ZOOM_EXE = "C:\\Users\\carol\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe" # Change this later
-
+ZOOM_EXE = "C:/Users/ayush/AppData/Roaming/Zoom/bin/Zoom.exe"
 JOIN_WAIT = 20
 
 pyautogui.FAILSAFE = True
@@ -103,7 +102,7 @@ def cameraSettingNoBlur() -> None:
         raise RuntimeError("Could not focus Zoom window!")
     pyautogui.hotkey("alt", "v")
     
-def screenShare(open_wait_s: float = 4) -> None:
+def screenShare(open_wait_s: float = 3) -> None:  #3s to match the teams script
     if not hard_focus_zoom():
         raise RuntimeError("Could not focus Zoom window!")
     
@@ -137,7 +136,7 @@ def cameraSettingWithBlur(
 
     pyautogui.press("enter")
 
-def killZoom(wait_s: float = 2.0) -> None:
+def killZoom(wait_s: float = 5.0) -> None:
     subprocess.run(["taskkill", "/F", "/T", "/IM", "Zoom.exe"],
                    stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL,
@@ -148,45 +147,47 @@ def killZoom(wait_s: float = 2.0) -> None:
 
 # Testing it all out
 
-print("Opening Zoom Meeting...")
-openZoom()
+# print("Opening Zoom Meeting...")
+# openZoom()
 
-print(f"Waiting {JOIN_WAIT} seconds for Zoom to launch/join...")
-time.sleep(JOIN_WAIT)
+# print(f"Waiting {JOIN_WAIT} seconds for Zoom to launch/join...")
+# time.sleep(JOIN_WAIT)
 
-print("Toggling camera...")
-cameraSettingNoBlur()
+# print("Toggling camera...")
+# cameraSettingNoBlur()
 
-print("Sharing screen...")
-screenShare()
+# print("Sharing screen...")
+# screenShare()
 
-time.sleep(10)
+# time.sleep(10)
 
-print("Stop sharing screen...")
-stop_sharing_screen()
+# print("Stop sharing screen...")
+# stop_sharing_screen()
 
-time.sleep(3)
+# time.sleep(2)
 
-print("Toggling blurring of the background...")
-x, y = zoom_window_xy(0.85, 0.20)
-cameraSettingWithBlur(
-    right_click_x=x,
-    right_click_y=y,
-    down_presses=3
-)
+# print("Toggling blurring of the background...")
+# x, y = zoom_window_xy(0.85, 0.20)
+# cameraSettingWithBlur(
+#     right_click_x=x,
+#     right_click_y=y,
+#     down_presses=3
+# )
 
-time.sleep(5)
+# time.sleep(5)
 
-cameraSettingWithBlur(
-    right_click_x=x,
-    right_click_y=y,
-    down_presses=3
-)
+# cameraSettingWithBlur(
+#     right_click_x=x,
+#     right_click_y=y,
+#     down_presses=3
+# )
 
 
 
-print("Done!")
+# time.sleep(5)
+# print("Done!")
+# killZoom()
 
-killZoom()
 
-# To run, just type in terminal: python zoom.py
+
+# # To run, just type in terminal: python zoom.py

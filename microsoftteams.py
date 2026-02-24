@@ -7,7 +7,8 @@ import pygetwindow as gw
 # os.system('start "" "https://teams.microsoft.com/l/meetup-join/XXXX"')              
 
 pyautogui.FAILSAFE = True
-iteration = 2
+pyautogui.PAUSE = 0.2
+iteration = 1
 
 # need this to open the app
 def openMicroTeams():
@@ -44,11 +45,15 @@ def switchMenu():
 def killTeams():
     subprocess.run(
         ["taskkill", "/F", "/IM", "ms-teams.exe", "/T"],
-        shell=False
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     subprocess.run(
         ["taskkill", "/F", "/IM", "Teams.exe", "/T"],
-        shell=False
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     print("Teams killed")
 
@@ -88,21 +93,41 @@ def noCameraSetting():
     # camera auto off 
     pyautogui.press("tab", presses=7, interval=0.4)
     pyautogui.press("enter")
+    time.sleep(30)  
+    pyautogui.hotkey("ctrl", "shift", "o")
+
+def noCameraSetting2():
+    # camera auto off 
+    pyautogui.press("tab", presses=7, interval=0.4)
+    pyautogui.press("enter")
+
+
+def cameraopencommand():
+    pyautogui.hotkey("ctrl", "shift", "o")
+
 
 def screenShare():
     # screen share
-    time.sleep(2)
     pyautogui.hotkey("ctrl", "shift", "e")  
-    time.sleep(1)
     pyautogui.press("tab", presses=3, interval=0.8)
+    pyautogui.press("enter")        
+
+
+def turnOnBlurinMeeting():
+    time.sleep(3)
+    pyautogui.press("left")
     pyautogui.press("enter")
+    pyautogui.press("tab")
+    pyautogui.press("right")
+    pyautogui.press("enter")
+    pyautogui.press("esc")
 
 
 # select the options cameraBlur, cameraNoblur and camerano
 def optionSelect():
-    cameraSettingWithBlur()
+    # cameraSettingWithBlur()
     # cameraSettingNoBlur()
-    # noCameraSetting()
+    noCameraSetting()
 
 
 def navigateToMeet():
@@ -114,17 +139,6 @@ def navigateToMeet():
     pyautogui.press("enter")
     time.sleep(2)
 
-    #join based on options 
-    optionSelect()
-    screenShare()
-
-    # IMPORTANT how long it will wait after doing stuff (for now put it 10 sec for testing)
-    time.sleep(10)
-
-    # leave meeting
-    pyautogui.hotkey("ctrl", "shift", "e")    
-    time.sleep(2)
-    pyautogui.hotkey("ctrl", "shift", "h")
 
 
 def experimentation():
@@ -146,4 +160,4 @@ def experimentation():
     print("made it till here")
 
 
-experimentation()
+# experimentation()
