@@ -23,8 +23,7 @@ def processData():
 
         totalTime = df["Delta"].sum() / 1000
 
-        energyAll = (df["CPU_ENERGY (J)"].iloc[-1]- df["CPU_ENERGY (J)"].iloc[0])
-
+        energyAll = df["CPU_ENERGY (J)"].diff().clip(lower=0).sum()
         powerAverage = energyAll / totalTime if totalTime > 0 else 0
 
         filename = i.stem
