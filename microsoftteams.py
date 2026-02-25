@@ -2,9 +2,7 @@ import time
 import subprocess
 import pyautogui
 import pygetwindow as gw
-# import os
-
-# os.system('start "" "https://teams.microsoft.com/l/meetup-join/XXXX"')              
+import os
 
 pyautogui.FAILSAFE = True
 pyautogui.PAUSE = 0.2
@@ -12,7 +10,7 @@ iteration = 1
 
 # need this to open the app
 def openMicroTeams():
-    subprocess.Popen("start ms-teams:", shell=True)
+    os.system('start "" "https://teams.microsoft.com/l/meetup-join/XXXX"')              
     print("im open")
 
 #this just ensures that the automation works on the app and not like random places 
@@ -37,9 +35,9 @@ def useMicroTeamsApp():
 def switchMenu():
     # ctrl 1 and 2 to make it go to meet menu section in case of some issues
     pyautogui.hotkey("ctrl", "1")
-    time.sleep(1)
+    time.sleep(2)
     pyautogui.hotkey("ctrl", "2")
-    time.sleep(1)
+    time.sleep(2)
 
 # ensures teams is hard closed so when we open it everything is reset to default settings
 def killTeams():
@@ -93,8 +91,6 @@ def noCameraSetting():
     # camera auto off 
     pyautogui.press("tab", presses=7, interval=0.4)
     pyautogui.press("enter")
-    time.sleep(30)  
-    pyautogui.hotkey("ctrl", "shift", "o")
 
 def noCameraSetting2():
     # camera auto off 
@@ -104,6 +100,15 @@ def noCameraSetting2():
 
 def cameraopencommand():
     pyautogui.hotkey("ctrl", "shift", "o")
+
+def camOnBlurOff():
+    time.sleep(2)
+    pyautogui.hotkey("ctrl", "shift", "o")
+    pyautogui.press("left")
+    pyautogui.press("enter")
+    pyautogui.press("tab")
+    pyautogui.press("enter")
+    pyautogui.press("esc")
 
 
 def screenShare():
@@ -115,11 +120,17 @@ def screenShare():
 
 def turnOnBlurinMeeting():
     time.sleep(3)
-    pyautogui.press("left")
     pyautogui.press("enter")
     pyautogui.press("tab")
     pyautogui.press("right")
     pyautogui.press("enter")
+    pyautogui.press("esc")
+
+def turnOffBlurinMeeting(): 
+    time.sleep(3) 
+    pyautogui.press("enter") 
+    pyautogui.press("tab") 
+    pyautogui.press("enter") 
     pyautogui.press("esc")
 
 
