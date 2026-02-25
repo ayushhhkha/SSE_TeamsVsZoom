@@ -1,41 +1,50 @@
 import pandas as pd
-import os
 from pathlib import Path
 
-def calculate_averages():
-  
-    data_dir = Path('results/data')
-    output_file = Path('results/processedDatas.csv')
-    
-    results = []
-    
-    csv_files = sorted(data_dir.glob('*.csv'))
-        
-    for csv_file in csv_files:
-        try:
-            df = pd.read_csv(csv_file)
-            
-            if 'Delta' in df.columns and 'CPU_ENERGY (J)' in df.columns:
-                delta = df['Delta'].mean()
-                cpu_energy = df['CPU_ENERGY (J)'].mean()
-                
-                results.append({
-                    'Experiment Name': csv_file.stem,  
-                    'Delta': delta,
-                    'CPU_Energy (J)': cpu_energy
-                })
-                
-                # print(f"Processed: {csv_file.name}")
-            else:
-                print("oops smth went wrong")
-                
-        except Exception as e:
-            print(f"Error processing {csv_file.name}: {e}")
-    
-    results_df = pd.DataFrame(results)
-    
-    results_df.to_csv(output_file, index=False)
-    print(f"\nResults saved to {output_file}")
-    print(f"checking if all the csv files were used = {len(results)}")
+def processData():
+    data_dir = Path("results/data")
+    output_file = Path("results/processedDatas.csv")
 
-calculate_averages()
+    results = []
+
+    csVFiles = sorted(data_dir.glob("*.csv"))
+
+    for i in csVFiles:
+        
+        df = pd.read_csv(i)
+
+        df.columns = df.columns.str.strip()
+
+        if df.empty:
+            continue
+
+        if "Delta" not in df.columns or "CPU_ENERGY (J)" not in df.columns:
+            continue
+
+        totalTime = df["Delta"].sum() / 1000
+
+        energyAll = (df["CPU_ENERGY (J)"].iloc[-1]- df["CPU_ENERGY (J)"].iloc[0])
+
+        powerAverage = energyAll / totalTime if totalTime > 0 else 0
+
+        filename = i.stem
+        parts = filename.split("_")
+
+        run_number = parts[-1] if len(parts) > 1 else "1"
+        experiment_type = "_".join(parts[:-1]) if len(parts) > 1 else filename
+
+        results.append({
+            "Experiment Name": experiment_type,
+            "Run": run_number,
+            "Execution Time (seconds)": totalTime,
+            "CPU Energy (Joules)": energyAll,
+            "Average Power (Watts)": powerAverage,
+        })
+
+
+    if results:
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(output_file, index=False)
+        print(f"jus to check if all files were used = {len(results)}")
+
+processData()
