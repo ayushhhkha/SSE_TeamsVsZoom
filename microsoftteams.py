@@ -35,9 +35,9 @@ def useMicroTeamsApp():
 def switchMenu():
     # ctrl 1 and 2 to make it go to meet menu section in case of some issues
     pyautogui.hotkey("ctrl", "1")
-    time.sleep(1)
+    time.sleep(2)
     pyautogui.hotkey("ctrl", "2")
-    time.sleep(1)
+    time.sleep(2)
 
 # ensures teams is hard closed so when we open it everything is reset to default settings
 def killTeams():
