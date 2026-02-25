@@ -124,9 +124,6 @@ def analyze_group(df_g: pd.DataFrame, name: str):
     
 # Data preprocessing
 
-from pathlib import Path
-import re
-
 def parse_metadata_from_filename(p: Path) -> dict:
     stem = p.stem.lower()
 
@@ -242,42 +239,91 @@ def compare_settings(label_a: str, df_a: pd.DataFrame, label_b: str, df_b: pd.Da
 
     if both_normal:
         t = welch_ttest(a, b)
-        d = cohens_d(a, b)
-        print(f"TEST: Welch t-test  p={t.pvalue:.6g}  effect(Cohen d)={d:.4f}")
+        eff = cohens_d(a, b)
+        test_name = "Welch t-test"
+        eff_name = "Cohen's d"
+        pval = float(t.pvalue)
     else:
         u = mannwhitney_u(a, b)
-        cl = common_language(a, b)
-        print(f"TEST: Mann–Whitney  p={u.pvalue:.6g}  effect(Common language)={cl:.4f}")
-
+        eff = common_language(a, b)
+        test_name = "Mann–Whitney U"
+        eff_name = "Common language"
+        pval = float(u.pvalue)
+        
+    print(f"TEST: {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
+    
+    return {
+        "metric": metric,
+        "label_a": label_a,
+        "label_b": label_b,
+        "n_a": int(len(df_a)),
+        "n_b": int(len(df_b)),
+        "n_a_clean": int(len(a_clean)),
+        "n_b_clean": int(len(b_clean)),
+        "outliers_a": int(out_a),
+        "outliers_b": int(out_b),
+        "shapiro_p_a": float(p_a) if p_a == p_a else np.nan,
+        "shapiro_p_b": float(p_b) if p_b == p_b else np.nan,
+        "test": test_name,
+        "pvalue": pval,
+        "effect_name": eff_name,
+        "effect": float(eff),
+        "mean_a": float(np.mean(a)) if len(a) else np.nan,
+        "mean_b": float(np.mean(b)) if len(b) else np.nan,
+        "median_a": float(np.median(a)) if len(a) else np.nan,
+        "median_b": float(np.median(b)) if len(b) else np.nan,
+        "figure": filename,
+        "title": title,
+    }
+    
 def subset_for_factor(df_runs: pd.DataFrame, factor: str) -> pd.DataFrame:
     return df_runs[df_runs[factor].notna()].copy()
 
-# CAMERA analysis
-df_cam = subset_for_factor(df_runs, "camera")
-compare_settings(
-    "Zoom camera ON",  df_cam.query("app=='zoom' and camera=='on'"),
-    "Zoom camera OFF", df_cam.query("app=='zoom' and camera=='off'"),
-    metric="avg_power_W",
-    title="Zoom – Average power (camera ON vs OFF)",
-    filename="zoom_camera_avg_power_violin.png"
-)
+def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), factors=("camera", "blur", "share"), apps=("zoom", "teams")) -> pd.DataFrame:
+    rows =[]
+    
+    for metric in metrics:
+        for factor in factors:
+            df_factor = subset_for_factor(df_runs, factor)  # rows where that factor is known
 
-# BLUR analysis
-df_blur = subset_for_factor(df_runs, "blur")
-compare_settings(
-    "Teams blur ON",  df_blur.query("app=='teams' and blur=='on'"),
-    "Teams blur OFF", df_blur.query("app=='teams' and blur=='off'"),
-    metric="avg_power_W",
-    title="Teams – Average power (blur ON vs OFF)",
-    filename="teams_blur_avg_power_violin.png"
-)
+            for app in apps:
+                df_app = df_factor.query("app==@app")
 
-# SHARE analysis
-df_share = subset_for_factor(df_runs, "share")
-compare_settings(
-    "Zoom share ON",  df_share.query("app=='zoom' and share=='on'"),
-    "Zoom share OFF", df_share.query("app=='zoom' and share=='off'"),
-    metric="avg_power_W",
-    title="Zoom – Average power (share ON vs OFF)",
-    filename="zoom_share_avg_power_violin.png"
-)
+                df_on = df_app.query(f"{factor}=='on'")
+                df_off = df_app.query(f"{factor}=='off'")
+
+                # Skip if missing either side
+                if len(df_on) == 0 or len(df_off) == 0:
+                    print(f"[SKIP] {app} {factor} ({metric}): missing ON or OFF data")
+                    continue
+
+                label_on = f"{app.capitalize()} {factor} ON"
+                label_off = f"{app.capitalize()} {factor} OFF"
+
+                title = f"{app.capitalize()} – {metric} ({factor} ON vs OFF)"
+                fig_name = f"{app}_{factor}_{metric}_violin.png"
+
+                res = compare_settings(
+                    label_on, df_on,
+                    label_off, df_off,
+                    metric=metric,
+                    title=title,
+                    filename=fig_name
+                )
+
+                res["app"] = app
+                res["factor"] = factor
+                rows.append(res)
+
+    df_summary = pd.DataFrame(rows)
+    
+    Path("processed").mkdir(exist_ok=True)
+
+    out_csv = Path("processed") / "stat_summary_everything.csv"
+    df_summary.to_csv(out_csv, index=False)
+    print(f"Saved summary → {out_csv}")
+
+    return df_summary
+    
+df_summary = run_everything(df_runs)
+print(df_summary[["app","factor","metric","test","pvalue","effect_name","effect","figure"]])
