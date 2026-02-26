@@ -431,6 +431,9 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
     
     for metric in metrics:
         for factor in factors:
+            cross_app_combined_data = {}
+            cross_app_rows = []
+            
             for state in ["on", "off"]:
                 df_factor = subset_for_factor(df_runs, factor)
                 
@@ -467,14 +470,11 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
                 
                 print(f"TEST (cross-app): {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
                 
-                # Create separate violin plot 
-                cross_app_data = {
-                    "Zoom": z,
-                    "Teams": t
-                }
-                cross_title = f"{factor.capitalize()} {state.upper()} – {metric} (Zoom vs Teams)"
-                cross_fig_name = f"{factor}_{state}_{metric}_zoom_vs_teams.png"
-                violin_plot(cross_app_data, title=cross_title, ylabel=metric, filename=cross_fig_name, show=False)
+                # Add to combined plot data
+                cross_app_combined_data[f"Zoom {state.upper()}"] = z
+                cross_app_combined_data[f"Teams {state.upper()}"] = t
+                
+                cross_fig_name = f"{factor}_{metric}_zoom_vs_teams.png"
                 
                 rows.append({
                     "metric": metric,
@@ -501,13 +501,23 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
                     "std_a": stddev(z_clean[metric]),
                     "std_b": stddev(t_clean[metric]),
                     "figure": cross_fig_name, 
-                    "title": cross_title, 
+                    "title": f"{factor.capitalize()} – {metric} (Zoom vs Teams)", 
                     "app": "",
                     "factor": factor,
                     "comparison_type": "cross_app",
                     "state": state,
                 })
                 print()
+            
+            if cross_app_combined_data:
+                ordered_data = {}
+                for key in ["Zoom ON", "Teams ON", "Zoom OFF", "Teams OFF"]:
+                    if key in cross_app_combined_data:
+                        ordered_data[key] = cross_app_combined_data[key]
+                
+                cross_title = f"{factor.capitalize()} – {metric} (Zoom vs Teams)"
+                cross_fig_name = f"{factor}_{metric}_zoom_vs_teams.png"
+                violin_plot(ordered_data, title=cross_title, ylabel=metric, filename=cross_fig_name, show=False)
 
     df_summary = pd.DataFrame(rows)
     
