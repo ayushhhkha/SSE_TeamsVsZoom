@@ -349,7 +349,6 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
             df_factor = subset_for_factor(df_runs, factor)
             
             combined_data = {}
-            valid_apps = []
             
             for app in apps:
                 df_app = df_factor.query("app==@app")
@@ -357,20 +356,18 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
                 df_off = df_app.query(f"{factor}=='off'")
                 
                 if len(df_on) == 0 or len(df_off) == 0:
+                    print(f"[SKIP] {app} {factor} ({metric}): missing ON or OFF data")
                     continue
                 
                 a_clean, p_a, out_a = clean_and_test_runs(df_on, metric=metric)
-                b_clean, p_b, out_b = clean_and_test_runs(df_off, metric=metric)
-                
                 a = a_clean[metric].dropna().to_numpy()
-                b = b_clean[metric].dropna().to_numpy()
-                
                 label_on = f"{app.capitalize()} ON"
-                label_off = f"{app.capitalize()} OFF"
-                
                 combined_data[label_on] = a
+                
+                b_clean, p_b, out_b = clean_and_test_runs(df_off, metric=metric)
+                b = b_clean[metric].dropna().to_numpy()
+                label_off = f"{app.capitalize()} OFF"
                 combined_data[label_off] = b
-                valid_apps.append(app)
                 
                 print(f"{label_on}: n={len(df_on)} clean={len(a_clean)} outliers={out_a} shapiro_p={p_a}")
                 print(f"{label_off}: n={len(df_off)} clean={len(b_clean)} outliers={out_b} shapiro_p={p_b}")
@@ -390,7 +387,7 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
                     eff_name = "Common language"
                     pval = float(u.pvalue)
                 
-                print(f"Test: {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
+                print(f"Test (within-app): {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
                 
                 rows.append({
                     "metric": metric,
@@ -412,17 +409,104 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
                     "mean_b": float(np.mean(b)) if len(b) else np.nan,
                     "median_a": float(np.median(a)) if len(a) else np.nan,
                     "median_b": float(np.median(b)) if len(b) else np.nan,
+                    "var_a": variance(a_clean[metric]),
+                    "var_b": variance(b_clean[metric]),
+                    "std_a": stddev(a_clean[metric]),
+                    "std_b": stddev(b_clean[metric]),
                     "figure": f"{factor}_{metric}_combined.png",
-                    "title": f"{factor.capitalize()} – {metric} (ON vs OFF)",
+                    "title": f"{factor.capitalize()} – {metric}",
                     "app": app,
                     "factor": factor,
+                    "comparison_type": "within_app_feature",
                 })
             
             if combined_data:
-                title = f"{factor.capitalize()} – {metric} (ON vs OFF)"
+                title = f"{factor.capitalize()} – {metric}"
                 fig_name = f"{factor}_{metric}_combined.png"
-                
                 violin_plot(combined_data, title=title, ylabel=metric, filename=fig_name, show=False)
+                print()
+    
+    # Cross-app comparisons
+    print("\n=== CROSS-APP COMPARISONS (Zoom vs Teams) ===\n")
+    
+    for metric in metrics:
+        for factor in factors:
+            for state in ["on", "off"]:
+                df_factor = subset_for_factor(df_runs, factor)
+                
+                df_zoom = df_factor.query(f"app=='zoom' and {factor}==@state")
+                df_teams = df_factor.query(f"app=='teams' and {factor}==@state")
+                
+                if len(df_zoom) == 0 or len(df_teams) == 0:
+                    print(f"[SKIP] Zoom vs Teams {factor}={state} ({metric}): missing data")
+                    continue
+                
+                z_clean, p_z, out_z = clean_and_test_runs(df_zoom, metric=metric)
+                t_clean, p_t, out_t = clean_and_test_runs(df_teams, metric=metric)
+                
+                z = z_clean[metric].dropna().to_numpy()
+                t = t_clean[metric].dropna().to_numpy()
+                
+                print(f"Zoom {state.upper()}: n={len(df_zoom)} clean={len(z_clean)} outliers={out_z} shapiro_p={p_z}")
+                print(f"Teams {state.upper()}: n={len(df_teams)} clean={len(t_clean)} outliers={out_t} shapiro_p={p_t}")
+                
+                both_normal = (p_z >= 0.05) and (p_t >= 0.05)
+                
+                if both_normal:
+                    test = welch_ttest(z, t)
+                    eff = cohens_d(z, t)
+                    test_name = "Welch t-test"
+                    eff_name = "Cohen's d"
+                    pval = float(test.pvalue)
+                else:
+                    test = mannwhitney_u(z, t)
+                    eff = common_language(z, t)
+                    test_name = "Mann–Whitney U"
+                    eff_name = "Common language"
+                    pval = float(test.pvalue)
+                
+                print(f"TEST (cross-app): {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
+                
+                # Create separate violin plot 
+                cross_app_data = {
+                    "Zoom": z,
+                    "Teams": t
+                }
+                cross_title = f"{factor.capitalize()} {state.upper()} – {metric} (Zoom vs Teams)"
+                cross_fig_name = f"{factor}_{state}_{metric}_zoom_vs_teams.png"
+                violin_plot(cross_app_data, title=cross_title, ylabel=metric, filename=cross_fig_name, show=False)
+                
+                rows.append({
+                    "metric": metric,
+                    "label_a": f"Zoom {state.upper()}",
+                    "label_b": f"Teams {state.upper()}",
+                    "n_a": int(len(df_zoom)),
+                    "n_b": int(len(df_teams)),
+                    "n_a_clean": int(len(z_clean)),
+                    "n_b_clean": int(len(t_clean)),
+                    "outliers_a": int(out_z),
+                    "outliers_b": int(out_t),
+                    "shapiro_p_a": float(p_z) if p_z == p_z else np.nan,
+                    "shapiro_p_b": float(p_t) if p_t == p_t else np.nan,
+                    "test": test_name,
+                    "pvalue": pval,
+                    "effect_name": eff_name,
+                    "effect": float(eff),
+                    "mean_a": float(np.mean(z)) if len(z) else np.nan,
+                    "mean_b": float(np.mean(t)) if len(t) else np.nan,
+                    "median_a": float(np.median(z)) if len(z) else np.nan,
+                    "median_b": float(np.median(t)) if len(t) else np.nan,
+                    "var_a": variance(z_clean[metric]),
+                    "var_b": variance(t_clean[metric]),
+                    "std_a": stddev(z_clean[metric]),
+                    "std_b": stddev(t_clean[metric]),
+                    "figure": cross_fig_name, 
+                    "title": cross_title, 
+                    "app": "",
+                    "factor": factor,
+                    "comparison_type": "cross_app",
+                    "state": state,
+                })
                 print()
 
     df_summary = pd.DataFrame(rows)
