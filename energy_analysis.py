@@ -39,6 +39,14 @@ def zscore_outliers(series: pd.Series, threshold: float = Z_OUTLIER_THRESHOLD) -
     z = stats.zscore(series, nan_policy="omit")
     return np.abs(z) > threshold
 
+def variance(series: pd.Series) -> float:
+    x = series.dropna().to_numpy()
+    return float(np.var(x, ddof=1)) if len(x) > 1 else np.nan
+
+def stddev(series: pd.Series) -> float:
+    x = series.dropna().to_numpy()
+    return float(np.std(x, ddof=1)) if len(x) > 1 else np.nan
+
 def shapiro_test(series: pd.Series):
     x = series.dropna().to_numpy()
     
@@ -67,17 +75,62 @@ def common_language(a: np.ndarray, b: np.ndarray) -> float:
     n1, n2 = len(a), len(b)
     return float(u / (n1 * n2)) if n1 * n2 > 0 else np.nan
 
-def violin_plot(data_by_group: dict[str, np.ndarray], title: str, ylabel: str, filename: str | None = None, show: bool = True):
+def violin_plot(
+    data_by_group: dict[str, np.ndarray],
+    title: str,
+    ylabel: str,
+    filename: str | None = None,
+    show: bool = True,
+):
     labels = list(data_by_group.keys())
-    data = [data_by_group[k] for k in labels]
+    data = [np.asarray(data_by_group[k], dtype=float) for k in labels]
+    positions = np.arange(1, len(labels) + 1)
+
+    plt.figure(figsize=(1.9 * len(labels) + 3, 6))
+
+    vp = plt.violinplot(
+        data,
+        positions=positions,
+        widths=0.9,
+        showmeans=False,
+        showmedians=False,
+        showextrema=True, 
+    )
+
+    palette = ["#55A868", "#8172B3"]
     
-    plt.figure()
-    plt.violinplot(data, showmeans=True)
-    plt.xticks(range(1, len(labels) + 1), labels)
-    plt.ylabel(ylabel)
-    plt.title(title)
+    for i, body in enumerate(vp["bodies"]):
+        body.set_facecolor(palette[i % len(palette)])
+        body.set_edgecolor("black")
+        body.set_alpha(0.75)
+        body.set_linewidth(1.2)
+
+    for key in ("cbars", "cmins", "cmaxes"):
+        vp[key].set_color("black")
+        vp[key].set_linewidth(1)
+
+    plt.boxplot(
+        data,
+        positions=positions,
+        widths=0.28,
+        patch_artist=True,
+        showfliers=False,
+        showmeans=True,   
+        meanline=True,
+        boxprops=dict(facecolor="none", edgecolor="black", linewidth=1.4),
+        medianprops=dict(color="black", linewidth=2),
+        meanprops=dict(color="black", linewidth=2),
+        whiskerprops=dict(color="black", linewidth=1.2),
+        capprops=dict(color="black", linewidth=1.2),
+    )
+
+    plt.xticks(positions, labels, fontsize=12)
+    plt.ylabel(ylabel, fontsize=13)
+    plt.title(title, fontsize=16, weight="bold")
+
+    plt.grid(axis="y", linestyle="--", alpha=0.6)
     plt.tight_layout()
-    
+
     if filename is not None:
         path = FIG_DIR / filename
         plt.savefig(path, dpi=300, bbox_inches="tight")
@@ -252,6 +305,11 @@ def compare_settings(label_a: str, df_a: pd.DataFrame, label_b: str, df_b: pd.Da
         
     print(f"TEST: {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
     
+    var_a = float(np.var(a, ddof=1)) if len(a) > 1 else np.nan
+    var_b = float(np.var(b, ddof=1)) if len(b) > 1 else np.nan
+    std_a = float(np.std(a, ddof=1)) if len(a) > 1 else np.nan
+    std_b = float(np.std(b, ddof=1)) if len(b) > 1 else np.nan
+    
     return {
         "metric": metric,
         "label_a": label_a,
@@ -272,6 +330,10 @@ def compare_settings(label_a: str, df_a: pd.DataFrame, label_b: str, df_b: pd.Da
         "mean_b": float(np.mean(b)) if len(b) else np.nan,
         "median_a": float(np.median(a)) if len(a) else np.nan,
         "median_b": float(np.median(b)) if len(b) else np.nan,
+        "var_a": var_a,
+        "var_b": var_b,
+        "std_a": std_a,
+        "std_b": std_b,
         "figure": filename,
         "title": title,
     }
@@ -284,7 +346,7 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
     
     for metric in metrics:
         for factor in factors:
-            df_factor = subset_for_factor(df_runs, factor)  # rows where that factor is known
+            df_factor = subset_for_factor(df_runs, factor)
 
             for app in apps:
                 df_app = df_factor.query("app==@app")
