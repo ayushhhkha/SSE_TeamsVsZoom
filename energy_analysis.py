@@ -280,40 +280,88 @@ def subset_for_factor(df_runs: pd.DataFrame, factor: str) -> pd.DataFrame:
     return df_runs[df_runs[factor].notna()].copy()
 
 def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), factors=("camera", "blur", "share"), apps=("zoom", "teams")) -> pd.DataFrame:
-    rows =[]
+    rows = []
     
     for metric in metrics:
         for factor in factors:
-            df_factor = subset_for_factor(df_runs, factor)  # rows where that factor is known
-
+            df_factor = subset_for_factor(df_runs, factor)
+            
+            combined_data = {}
+            valid_apps = []
+            
             for app in apps:
                 df_app = df_factor.query("app==@app")
-
                 df_on = df_app.query(f"{factor}=='on'")
                 df_off = df_app.query(f"{factor}=='off'")
-
-                # Skip if missing either side
+                
                 if len(df_on) == 0 or len(df_off) == 0:
-                    print(f"[SKIP] {app} {factor} ({metric}): missing ON or OFF data")
                     continue
-
-                label_on = f"{app.capitalize()} {factor} ON"
-                label_off = f"{app.capitalize()} {factor} OFF"
-
-                title = f"{app.capitalize()} – {metric} ({factor} ON vs OFF)"
-                fig_name = f"{app}_{factor}_{metric}_violin.png"
-
-                res = compare_settings(
-                    label_on, df_on,
-                    label_off, df_off,
-                    metric=metric,
-                    title=title,
-                    filename=fig_name
-                )
-
-                res["app"] = app
-                res["factor"] = factor
-                rows.append(res)
+                
+                a_clean, p_a, out_a = clean_and_test_runs(df_on, metric=metric)
+                b_clean, p_b, out_b = clean_and_test_runs(df_off, metric=metric)
+                
+                a = a_clean[metric].dropna().to_numpy()
+                b = b_clean[metric].dropna().to_numpy()
+                
+                label_on = f"{app.capitalize()} ON"
+                label_off = f"{app.capitalize()} OFF"
+                
+                combined_data[label_on] = a
+                combined_data[label_off] = b
+                valid_apps.append(app)
+                
+                print(f"{label_on}: n={len(df_on)} clean={len(a_clean)} outliers={out_a} shapiro_p={p_a}")
+                print(f"{label_off}: n={len(df_off)} clean={len(b_clean)} outliers={out_b} shapiro_p={p_b}")
+                
+                both_normal = (p_a >= 0.05) and (p_b >= 0.05)
+                
+                if both_normal:
+                    t = welch_ttest(a, b)
+                    eff = cohens_d(a, b)
+                    test_name = "Welch t-test"
+                    eff_name = "Cohen's d"
+                    pval = float(t.pvalue)
+                else:
+                    u = mannwhitney_u(a, b)
+                    eff = common_language(a, b)
+                    test_name = "Mann–Whitney U"
+                    eff_name = "Common language"
+                    pval = float(u.pvalue)
+                
+                print(f"Test: {test_name}  p={pval:.6g}  effect({eff_name})={eff:.4f}")
+                
+                rows.append({
+                    "metric": metric,
+                    "label_a": f"{app.capitalize()} {factor} ON",
+                    "label_b": f"{app.capitalize()} {factor} OFF",
+                    "n_a": int(len(df_on)),
+                    "n_b": int(len(df_off)),
+                    "n_a_clean": int(len(a_clean)),
+                    "n_b_clean": int(len(b_clean)),
+                    "outliers_a": int(out_a),
+                    "outliers_b": int(out_b),
+                    "shapiro_p_a": float(p_a) if p_a == p_a else np.nan,
+                    "shapiro_p_b": float(p_b) if p_b == p_b else np.nan,
+                    "test": test_name,
+                    "pvalue": pval,
+                    "effect_name": eff_name,
+                    "effect": float(eff),
+                    "mean_a": float(np.mean(a)) if len(a) else np.nan,
+                    "mean_b": float(np.mean(b)) if len(b) else np.nan,
+                    "median_a": float(np.median(a)) if len(a) else np.nan,
+                    "median_b": float(np.median(b)) if len(b) else np.nan,
+                    "figure": f"{factor}_{metric}_combined.png",
+                    "title": f"{factor.capitalize()} – {metric} (ON vs OFF)",
+                    "app": app,
+                    "factor": factor,
+                })
+            
+            if combined_data:
+                title = f"{factor.capitalize()} – {metric} (ON vs OFF)"
+                fig_name = f"{factor}_{metric}_combined.png"
+                
+                violin_plot(combined_data, title=title, ylabel=metric, filename=fig_name, show=False)
+                print()
 
     df_summary = pd.DataFrame(rows)
     
@@ -324,6 +372,6 @@ def run_everything(df_runs: pd.DataFrame, metrics=("avg_power_W", "EDP_Js"), fac
     print(f"Saved summary → {out_csv}")
 
     return df_summary
-    
+
 df_summary = run_everything(df_runs)
 print(df_summary[["app","factor","metric","test","pvalue","effect_name","effect","figure"]])
