@@ -2,3 +2,6 @@ pyautogui
 pygetwindow     
 tqdm
 scipy
+pandas
+numpy
+matplotlib
