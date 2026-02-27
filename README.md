@@ -26,6 +26,13 @@ This repository contains an automation of measure the energy Microsoft Team and 
 
 - Update ``ZOOM_EXE`` variable with an accurate path to the _zoom.exe_ file on local machine
 
+- Ensure all settings are set to default. The camera should be off and blurring should be disabled.
+  
+-  Force shut down both applications.
+
+-  Ensure the location of EnergiBridge is updated in the main.py based on the users computer location.
+  
+-  Ensure it is in zen mode: 100% brightness, 30% volume, wireless connection, all non-essential applications are stopped, the device notification should be turned off and the laptop should be plugged in.
 
 
 2. Run the automation script:
@@ -33,3 +40,11 @@ This repository contains an automation of measure the energy Microsoft Team and 
    ```bash
    python main.py
    ```
+
+3. Run the Energy Analysis Script:
+
+    ```bash
+   python energy_analysis.py
+   ```
+   
+
